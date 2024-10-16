@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Fetch Data</title>
+  <style>
+    body {
+      font-family: sans-serif;
+    }
+
+    .container {
+      width: 900px; /* Perbesar lebar container */
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+
+    button {
+      background-color: #1c58ff;
+      color: white;
+      padding: 10px 20px;
+      margin: 10px 0;
+      border: none;
+      cursor: pointer;
+    }
+
+    #api-response, #posts-response {
+      margin-top: 20px;
+    }
+
+    table {
+      width: 100%; /* Lebar penuh untuk tampilan tabel persegi panjang */
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 12px; /* Tambahkan padding agar lebih luas */
+      text-align: left;
+    }
+
+    th {
+      background-color: #f2f2f2;
+      font-weight: bold;
+    }
+
+    td {
+      word-break: break-word; /* Agar teks panjang bisa dipotong otomatis */
+    }
+
+    /* Tentukan lebar spesifik untuk kolom Title dan Body agar tampak lebih baik */
+    td.title {
+      width: 30%; /* Lebar khusus untuk kolom Title */
+    }
+
+    td.body {
+      width: 50%; /* Lebar khusus untuk kolom Body */
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Fetch Data</h1>
+
+    <label for="api-endpoint">API Endpoint URL:</label>
+    <input type="text" id="api-endpoint" placeholder="https://jsonplaceholder.typicode.com/users">
+
+    <button id="fetch-data">Fetch Data</button>
+
+    <h2>API Response:</h2>
+    <div id="api-response"></div>
+
+    <!-- Tombol untuk Posts by User ID -->
+    <label for="user-id">Enter User ID for Posts:</label>
+    <input type="text" id="user-id" placeholder="User ID">
+
+    <button id="fetch-posts">Posts by User ID</button>
+
+    <h2>Posts by User ID:</h2>
+    <div id="posts-response"></div>
+
+    <script>
+      const apiEndpointInput = document.getElementById('api-endpoint');
+      const fetchDataButton = document.getElementById('fetch-data');
+      const apiResponse = document.getElementById('api-response');
+
+      const userIdInput = document.getElementById('user-id');
+      const fetchPostsButton = document.getElementById('fetch-posts');
+      const postsResponse = document.getElementById('posts-response');
+
+      // Fungsi untuk Fetch Data Users
+      fetchDataButton.addEventListener('click', () => {
+        const apiEndpoint = apiEndpointInput.value;
+
+        fetch(apiEndpoint)
+          .then(response => response.json())
+          .then(data => {
+            apiResponse.innerHTML = ''; // Clear any previous response
+
+            const dataArray = Array.isArray(data) ? data : [data]; // Handle if response is not an array
+
+            // Create a table element
+            const table = document.createElement('table');
+            const thead = document.createElement('thead');
+            const tbody = document.createElement('tbody');
+
+            // Create table header
+            const headerRow = document.createElement('tr');
+            const headers = ['ID', 'Name', 'Username', 'Email', 'Address', 'Phone', 'Website', 'Company'];
+            headers.forEach(header => {
+              const th = document.createElement('th');
+              th.textContent = header;
+              headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+
+            // Populate table rows with data
+            dataArray.forEach(item => {
+              const row = document.createElement('tr');
+
+              const address = item.address ? `${item.address.street}, ${item.address.city}` : 'N/A';
+              const company = item.company ? item.company.name : 'N/A';
+
+              row.innerHTML = `
+                <td>${item.id || 'N/A'}</td>
+                <td>${item.name || 'N/A'}</td>
+                <td>${item.username || 'N/A'}</td>
+                <td>${item.email || 'N/A'}</td>
+                <td>${address}</td>
+                <td>${item.phone || 'N/A'}</td>
+                <td>${item.website || 'N/A'}</td>
+                <td>${company}</td>
+              `;
+
+              tbody.appendChild(row);
+            });
+
+            // Append thead and tbody to the table
+            table.appendChild(thead);
+            table.appendChild(tbody);
+
+            // Append the table to the API response container
+            apiResponse.appendChild(table);
+          })
+          .catch(error => {
+            apiResponse.textContent = `Error: ${error.message}`;
+          });
+      });
+
+      // Fungsi untuk Fetch Posts berdasarkan User ID
+      fetchPostsButton.addEventListener('click', () => {
+        const userId = userIdInput.value;
+        if (!userId) {
+          postsResponse.textContent = 'Please enter a User ID!';
+          return;
+        }
+
+        const postsEndpoint = `https://jsonplaceholder.typicode.com/posts?userId=${userId}`;
+
+        fetch(postsEndpoint)
+          .then(response => response.json())
+          .then(posts => {
+            postsResponse.innerHTML = ''; // Clear previous posts
+
+            // Create a table element
+            const table = document.createElement('table');
+            const thead = document.createElement('thead');
+            const tbody = document.createElement('tbody');
+
+            // Create table header
+            const headerRow = document.createElement('tr');
+            const headers = ['UserID', 'ID', 'Title', 'Body'];
+            headers.forEach(header => {
+              const th = document.createElement('th');
+              th.textContent = header;
+              headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+
+            // Populate table rows with posts data
+            posts.forEach(post => {
+              const row = document.createElement('tr');
+              row.innerHTML = `
+                <td>${post.userId}</td>
+                <td>${post.id}</td>
+                <td class="title">${post.title}</td> <!-- Kolom khusus untuk Title -->
+                <td class="body">${post.body}</td> <!-- Kolom khusus untuk Body -->
+              `;
+              tbody.appendChild(row);
+            });
+
+            // Append thead and tbody to the table
+            table.appendChild(thead);
+            table.appendChild(tbody);
+
+            // Append the table to the posts response container
+            postsResponse.appendChild(table);
+          })
+          .catch(error => {
+            postsResponse.textContent = `Error: ${error.message}`;
+          });
+      });
+    </script>
+  </div>
+</body>
+</html>
